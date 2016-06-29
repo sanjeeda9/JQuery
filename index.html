@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>Assignment</title>
+        <link href="lib/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+        <style>
+  .xl text {
+    font-size: 0pt;
+    font-weight: bold;
+  }
+  .color-legend text {
+      font-family: 'Open Sans', sans-serif;
+      margin-left: 10px;
+      font-size: 9pt;
+    }</style>
+    </head>
+    <body>
+        <div class="container">
+        <div class="row" id="graphs">
+        <div class="col-sm-12">
+        <div class="tabbable">
+        <ul class="nav nav-tabs">
+        <li ><a href="#tab1" data-toggle="tab" id="link1">Graph 1</a></li>
+        <li><a href="#tab2" data-toggle="tab" id="link2">Graph 2</a></li>
+        </ul><!--End of nav nav-tabs-->
+            <div class="tab-content" id="con">
+                <div class="tab-pane active" id="tab1">
+                     <center><h2 class="h2">Age VS Population</h2></center>
+                <div class="col-sm-6" id="table1">
+                 <script id="tb1" type="text/x-jquery-tmpl">
+                     <tr class="tdata">
+                        <td>{{age}}</td>
+                        <td>{{population}}</td>
+                        <td><button id="{{i}}" class="btn btn-danger">delete</button></td>
+                     </tr>
+                 </script>  
+                    <table id="data1" class="table table-hover">
+                    <thead><tr><th>Age</th><th>Population</th><th>action</th></tr>
+                            <tr><th><input type="text" class="form-control" id="age1"
+placeholder="Enter Age"></th>
+                            <th><input type="number" id="pop1" class="form-control" placeholder="Enter popultion"></th>
+                                <th><button id="add1" class="btn btn-success">Add</button></th>
+                            </tr>
+                        </thead>
+                        
+                    </table> 
+                 </div><!--End of table1-->
+                <div class="col-sm-6" id="g1">
+             
+                </div><!--End of g1-->
+                </div><!--End of tab1-->
+                <div class="tab-pane" id="tab2">
+                    <center><h2 class="h2">Education Qualification VS Population</h2></center>
+			    <div class="col-sm-6" id="table2">
+               <script id="tb2" type="text/x-jquery-tmpl">
+                     <tr class="tdata">
+                        <td>{{age}}</td>
+                        <td>{{population}}</td>
+                        <td><button id="{{i}}" class="btn btn-danger">delete</button></td>
+                     </tr>
+                 </script>  
+                    <table id="data2" class="table table-hover">
+                    <thead><tr><th>Education Qualification</th><th>Population</th><th>action</th></tr>
+                         <tr><td><input type="text" class="form-control" id="eq"
+placeholder="Education Qualification"></td>
+                            <td><input type="number" id="pop2" class="form-control" placeholder="Enter popultion"></td>
+                                <td><button id="add2" class="btn btn-success">Add</button></td>
+                            </tr>
+                        </thead>
+                    </table>
+                  </div><!--End of tab2-->
+                <div class="col-sm-6" id="g2">
+              
+                </div><!--End of g2-->
+                </div><!--End of tab2-->
+            </div><!--End of tab-content-->
+        </div><!--End of tabbable-->
+        </div><!--End of col-sm-12-->
+        </div><!--End of row class-->
+        </div><!--End of container-->
+        	
+        <script src="lib/d3.min.js"></script>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/d3-legend/1.1.0/d3-legend.js"></script>
+        <script src="lib/jquery-3.0.0.js"></script>
+        <script src="lib/bootstrap/js/bootstrap.min.js"></script>
+       <script>
+           $.ajaxSetup({
+               // Disable caching of AJAX responses
+               // Used when debugging
+               cache: false
+           });
+           //graph drawing using d3
+           var drawGraph = function (x, y, data, body) {
+               console.log("drawGraph");
+               //console.log(data);
+               $(body + ":has(svg)").empty();
+               var outerWidth = 750;
+               var outerHeight = 2000;
+               var margin = { left: 90, top: 86, right: 30, bottom: 20 };
+               var barPadding = 0.2;
+
+               var xColumn = x
+               var yColumn = y
+               var colorColumn = x;
+               var innerWidth = outerWidth - margin.left - margin.right;
+               var innerHeight = outerHeight - margin.top - margin.bottom - 1500;
+
+               var svg = d3.select("" + body).append("svg")
+                           .attr("width", outerWidth)
+                           .attr("height", outerHeight);
+               var g = svg.append("g")
+                           .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+               var xAxisG = g.append("g")
+                            .attr("class", "xl")
+                           .attr("transform", "translate(0," + innerHeight + ")");
+
+               var yAxisG = g.append("g");
+               var colorLegendG = g.append("g")
+                      .attr("class", "color-legend")
+                      .attr("transform", "translate(50, 450)");
+
+               var xScale = d3.scale.ordinal().rangeBands([0, innerWidth - 100], barPadding);
+               var yScale = d3.scale.linear().range([innerHeight, 0]);
+               var colorScale = d3.scale.category10();
+               var xAxis = d3.svg.axis().scale(xScale).orient("bottom");
+               var yAxis = d3.svg.axis().scale(yScale).orient("left");
+               var colorLegend = d3.legend.color()
+                                      .scale(colorScale)
+                                      .shapePadding(30)
+                                      .shapeWidth(15)
+                                      .shapeHeight(15)
+                                      .labelOffset(10);
+               xScale.domain(data.map(function (d) { return d[xColumn]; }));
+               yScale.domain([0, d3.max(data, function (d) { return d[yColumn]; })]);
+               colorScale.domain(data.map(function (d) { return d[colorColumn]; }));
+               xAxisG.call(xAxis);
+               yAxisG.call(yAxis);
+
+               var bars = g.selectAll("rect").data(data);
+               bars.enter().append("rect")
+                             .attr("width", xScale.rangeBand())
+                             .attr("fill", "#1f77b4");
+               bars
+                             .attr("x", function (d) { return xScale(d[xColumn]); })
+                             .attr("y", function (d) { return yScale(d[yColumn]); })
+                             .attr("height", function (d) {
+                                 return innerHeight - yScale(parseInt(d[yColumn]));
+
+                             })
+                             .attr("fill", function (d) {
+                                 return colorScale(d[colorColumn]);
+                             });
+               bars.exit().remove();
+               colorLegendG.call(colorLegend);
+           }
+           //reading input file to arrays
+           var arr1, arr2;
+           $.ajax({
+               dataType: "json",
+               url: "graph/output2.json",
+               async: false,
+               success: function (data) { arr1 = data }
+           });
+           $.ajax({
+               dataType: "json",
+               url: "graph/output3.json",
+               async: false,
+               success: function (data) { arr2 = data; }
+           });
+           //intially displaying graphs
+           drawGraph("x", "y", arr1, "#g1");
+           drawGraph("x", "y", arr2, "#g2");
+           //creating tables in divs
+           function createTable(arr, container, table) {
+               var data = $(container);
+               var temp = $.trim($(table).html()), t;
+               $(container + ":has(.tdata)").empty();
+               $.each(arr, function (index, d) {
+                   t = temp.replace(/{{age}}/ig, d.x)
+                     .replace(/{{population}}/ig, d.y)
+                   //.replace(/{{num}}/, index)
+                     .replace(/{{i}}/ig, index);
+                   //console.log(t + " " + index + " " + d["x"]);
+                   data.append(t);
+               });
+           }
+           //initially displaying tables 
+           createTable(arr1, "#data1", "#tb1");
+           createTable(arr2, "#data2", "#tb2");
+           //deleting row in table and displaying modified graph
+           $("#con").on('click', "button", function () {
+               console.log("inside button");
+               var index = $(this).attr("id"),
+                container = $(this).parents("table").attr("id");
+               if (index != "add1" && index != "add2") {
+                   var key = $(this).closest('tr').find('td:first').text();
+                   console.log("key" + key);
+                   $(this).closest('tr').remove();
+                   if (container == "data1") {
+                       //console.log(arr1.splice(arr1.indexOf(key), 1));
+                       $.each(arr1, function (index, d) {
+                           if (d != undefined && d["x"] === key) {
+                               console.log(d.x);
+                               arr1.splice(index, 1);
+                           }
+                       });
+                       drawGraph("x", "y", arr1, "#g1");
+                       //createTable(arr1, "#data1", "#tb1");
+                   }
+
+
+                   else {
+                       //console.log(arr2.splice(arr2.indexOf(key), 1));
+                       $.each(arr2, function (index, d) {
+                           if (d != undefined && d["x"] === key) {
+                               console.log(d.x);
+                               arr2.splice(index, 1);
+                           }
+                       });
+                       drawGraph("x", "y", arr2, "#g2");
+                       //createTable(arr2, "#data2", "#tb2");
+                   }
+               }
+           });
+           //removing object in array
+           function removeObj(arr, val) {
+               $.each(arr, function (index, d) {
+                   if (d != undefined && d["x"] === val) {
+                       console.log(d.x);
+                       arr.splice(index, 1);
+                       return arr
+                   }
+               });
+           }
+           $('#add1').on('click', function () {
+               var age = $('#age1').val(),
+                pop1 = $("#pop1").val();
+               $('#age1').val("");
+               $("#pop1").val("");
+               console.log(age + " " + pop1);
+               if (age != undefined && pop1 != undefined && age.trim() != "" && pop1.trim() != "") {
+                   $('#data1').append("<tr class=tdata><td>" + age + "</td><td>" + pop1 + "</td><td><button class='btn btn-danger' id=" + age + ">delete</button></td></tr>");
+                   var obj = { x: age, y: pop1 };
+                   arr1.push(obj);
+                   drawGraph("x", "y", arr1, "#g1");
+               }
+           });
+           $('#add2').on('click', function () {
+               var age = $('#eq').val(),
+                pop1 = $("#pop2").val();
+               $('#eq').val("");
+               $("#pop2").val("");
+               console.log(age + " " + pop1);
+               if (age != undefined && pop1 != undefined && age.trim() != "" && pop1.trim() != "") {
+                   $('#data2').append("<tr class=tdata><td>" + age + "</td><td>" + pop1 + "</td><td><button class='btn btn-danger' id=" + age + ">delete</button></td></tr>");
+                   var obj = { x: age, y: pop1 };
+                   arr2.push(obj);
+                   drawGraph("x", "y", arr2, "#g2");
+               }
+           });
+           var age = $('#age1').text(),
+                pop1 = $("pop1").text(),
+                eq = $('#eq').text(),
+                pop2 = $('#pop2').text();
+           if (age != undefined && pop1 != undefined) {
+               $('#add1').removeAttr("disabled", "disabled");
+           }
+
+        </script>
+         </body>
+</html>
